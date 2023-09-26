@@ -31,18 +31,6 @@ const jwt_key = config.jwt_key;
 //       email: email.toLowerCase(),
 //       password: hashPassword,
 //     });
-
-//     // const token = jwt.sign(
-//     //   {
-//     //     user_id: user._id,
-//     //     email,
-//     //   },
-//     // jwt_key,
-//     //   { expiresIn: "2h" }
-//     // );
-//     // // // save user token
-
-//     // return new user
 //     res.status(200).send({ msg: "success" });
 //   } catch (err) {
 //     console.log(err);
@@ -68,22 +56,6 @@ exports.login = async (req, res) => {
       if (!passwordIsValid) res.status(401).send("Invalid Credentials");
       // get commission by user
 
-      const commissionLogs = await agent_commission_log
-        .find({
-          agentId: agent_user._id,
-        })
-        .populate("playerId");
-      // get all player
-      const temp_user = await agent.findOne({
-        username,
-      });
-      const allPlayers = await player
-        .find({ sponsorId: temp_user.agentId })
-        .populate("playerId", "idNumber -_id");
-      // console.log(allPlayers);
-      // get transaction length
-      const transaction_len = await player_transaction_history.find();
-
       const token = jwt.sign(
         {
           user_role: "agent",
@@ -96,12 +68,6 @@ exports.login = async (req, res) => {
       res.status(200).send({
         msg: "success",
         token: token,
-        username: agent_user.firstName + " " + agent_user.lastName,
-        agentId: agent_user.agentId.idNumber,
-        walletBalance: agent_user.walletBalance,
-        commission: commissionLogs,
-        top_players: allPlayers,
-        transaction_length: transaction_len.length,
         role: "agent",
       });
     } else {
@@ -126,40 +92,11 @@ exports.login = async (req, res) => {
           { expiresIn: "30d" }
         );
         // save user token
-        // commission log for master_agent
-        const master_commissionLogs = await master_agent_commission_log
-          .find({
-            masterAgentId: master_agent_user._id,
-          })
-          .populate("playerId");
-        // all players in player
-        const temp_master_agent_user = await master_agent
-        .findOne({
-          username,
-        });
-        const allPlayers = await player
-          .find({sponsorId: temp_master_agent_user.masterAgentId})
-          .populate("playerId", "idNumber -_id");
-          console.log(allPlayers);
-        //get all transaction length
-        const transaction_len = await player_transaction_history.find();
-        // get all agents in agent
-
-        const allAgent = await agent
-          .find({sponsorId : temp_master_agent_user.masterAgentId})
-          .populate("agentId", "idNumber -_id");
+    
         res.status(200).send({
           msg: "success",
           token: token,
-          username:
-            master_agent_user.firstName + " " + master_agent_user.lastName,
-          agentId: master_agent_user.masterAgentId.idNumber,
-          walletBalance: master_agent_user.walletBalance,
-          masterAgentCommission: master_commissionLogs,
-          top_players: allPlayers,
-          top_agents: allAgent,
-          transaction_length: transaction_len.length,
-          user_role: "master_agent",
+          role: "master_agent",
         });
       } else {
         res.status(400).send("Invalid Credentials");
@@ -167,5 +104,18 @@ exports.login = async (req, res) => {
     }
   } catch (err) {
     console.log(err);
+  }
+};
+exports.getUserRole = async (req, res) => {
+  try {
+    const token = req.headers["x-access-token"];
+    const decoded = jwt.verify(token, config.jwt_key);
+    const userRole = decoded.user_role;
+    res.status(200).send({
+      role: userRole
+    })
+   
+  } catch (error) {
+    console.log(error);
   }
 };
