@@ -74,13 +74,15 @@ exports.login = async (req, res) => {
         })
         .populate("playerId");
       // get all player
+      const temp_user = await agent.findOne({
+        username,
+      });
       const allPlayers = await player
-        .find()
+        .find({ sponsorId: temp_user.agentId })
         .populate("playerId", "idNumber -_id");
       // console.log(allPlayers);
       // get transaction length
       const transaction_len = await player_transaction_history.find();
-      console.log("length = ", transaction_len.length);
 
       const token = jwt.sign(
         {
@@ -131,14 +133,20 @@ exports.login = async (req, res) => {
           })
           .populate("playerId");
         // all players in player
+        const temp_master_agent_user = await master_agent
+        .findOne({
+          username,
+        });
         const allPlayers = await player
-          .find()
+          .find({sponsorId: temp_master_agent_user.masterAgentId})
           .populate("playerId", "idNumber -_id");
+          console.log(allPlayers);
         //get all transaction length
         const transaction_len = await player_transaction_history.find();
         // get all agents in agent
+
         const allAgent = await agent
-          .find()
+          .find({sponsorId : temp_master_agent_user.masterAgentId})
           .populate("agentId", "idNumber -_id");
         res.status(200).send({
           msg: "success",

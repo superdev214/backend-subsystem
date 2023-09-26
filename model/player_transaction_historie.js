@@ -10,6 +10,8 @@ const player_transaction_historieSchema = new mongoose.Schema({
   currency: { type: String },
   status: { type: String },
   datetime: { type: Date },
+}, {
+  timestamps: true 
 });
 
 module.exports = mongoose.model(
