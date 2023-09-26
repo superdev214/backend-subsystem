@@ -3,11 +3,13 @@ const auth = require("../middleware/auth");
 module.exports = (app) => {
   const user = require("../controllers/userController");
   const agent = require("../controllers/agentController");
+  const master = require("../controllers/masterController");
   let router = require("express").Router();
   // User Router
   // router.post("/register-user", user.register);
   router.post("/login", user.login);
   router.post("/agent/create-new-transaction", agent.createTransaction);
+  router.post("/master-agent/create-new-transaction", master.createTransaction);
   // router.get("/get-current-user", user.getCurrentUser);
 
   // router.post("/add-account-to-cart", user.addAccountToCart);

@@ -5,6 +5,7 @@ const player = require("../model/player");
 const agent_commission_log = require("../model/agent_commission_log");
 const player_transaction_history = require("../model/player_transaction_historie");
 const master_agent = require("../model/master_agent");
+const master_agent_commission_log = require("../model/master_agent_commission_log");
 const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 
@@ -58,7 +59,6 @@ exports.login = async (req, res) => {
         username,
       })
       .populate("agentId", "idNumber -_id");
-    console.log(agent_user.agentId.idNumber);
 
     if (agent_user) {
       var passwordIsValid = bcrypt.compareSync(
@@ -80,7 +80,7 @@ exports.login = async (req, res) => {
       // console.log(allPlayers);
       // get transaction length
       const transaction_len = await player_transaction_history.find();
-      console.log("length = ",transaction_len.length);
+      console.log("length = ", transaction_len.length);
 
       const token = jwt.sign(
         {
@@ -124,13 +124,33 @@ exports.login = async (req, res) => {
           { expiresIn: "30d" }
         );
         // save user token
+        // commission log for master_agent
+        const master_commissionLogs = await master_agent_commission_log
+          .find({
+            masterAgentId: master_agent_user._id,
+          })
+          .populate("playerId");
+        // all players in player
+        const allPlayers = await player
+          .find()
+          .populate("playerId", "idNumber -_id");
+        //get all transaction length
+        const transaction_len = await player_transaction_history.find();
+        // get all agents in agent
+        const allAgent = await agent
+          .find()
+          .populate("agentId", "idNumber -_id");
         res.status(200).send({
           msg: "success",
           token: token,
-          username: master_agent_user.firstname + master_agent_user.lastname,
-          agentID: master_agent_user.masterAgentId.idNumber,
+          username:
+            master_agent_user.firstName + " " + master_agent_user.lastName,
+          agentId: master_agent_user.masterAgentId.idNumber,
           walletBalance: master_agent_user.walletBalance,
-
+          masterAgentCommission: master_commissionLogs,
+          top_players: allPlayers,
+          top_agents: allAgent,
+          transaction_length: transaction_len.length,
           user_role: "master_agent",
         });
       } else {
